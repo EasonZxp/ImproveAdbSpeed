@@ -323,10 +323,10 @@ void send_connect(atransport *t)
     D("Calling send_connect \n");
     apacket *cp = get_apacket();
     cp->msg.command = A_CNXN;
-    cp->msg.arg0 = A_VERSION;
-    cp->msg.arg1 = MAX_PAYLOAD;
+    cp->msg.arg0 = t->get_protocol_version();
+    cp->msg.arg1 = t->get_max_payload();
     cp->msg.data_length = fill_connect_data((char *)cp->data,
-                                            sizeof(cp->data));
+                                            MAX_PAYLOAD_V1);
     send_packet(cp, t);
 }
 
@@ -419,6 +419,7 @@ void handle_packet(apacket *p, atransport *t)
             handle_offline(t);
         }
 
+        t->update_version(p->msg.arg0, p->msg.arg1);
         parse_banner(reinterpret_cast<const char*>(p->data), t);
 
         if (HOST || !auth_required) {
